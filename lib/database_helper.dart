@@ -24,9 +24,9 @@ class DatabaseHelper {
   static const _orderColumnCustomerName = 'customerName';
   static const _orderColumnOrderDate = 'orderDate';
   static const _orderColumnStatus = 'status';
+  static const _orderColumnProductName = 'productName';
   static const _orderColumnFotoProdukURL = 'fotoProdukURL';
   static const _orderColumnFotoProgressURL = 'fotoProgressURL';
-  static const _orderColumnProductName = 'productName';
   static const _orderColumnVideoProgressURL = 'videoProgressURL';
 
   // Order Item Table
@@ -71,9 +71,9 @@ class DatabaseHelper {
         $_orderColumnCustomerName TEXT NOT NULL,
         $_orderColumnOrderDate TEXT NOT NULL,
         $_orderColumnStatus TEXT NOT NULL,
+        $_orderColumnProductName TEXT NOT NULL,
         $_orderColumnFotoProdukURL TEXT,
         $_orderColumnFotoProgressURL TEXT,
-        $_orderColumnProductName TEXT NOT NULL,
         $_orderColumnVideoProgressURL TEXT
       )
     ''');
