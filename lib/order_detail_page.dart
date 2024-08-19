@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
 import 'order_model.dart';
 import 'api_service.dart';
+import 'package:video_player/video_player.dart';
 
 class OrderDetailPage extends StatefulWidget {
   final Order order;
@@ -35,6 +36,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   List<OrderItem> _orderItems = [];
   List<Map<String, dynamic>> _fotoProgressHistory = [];
   final ApiService _apiService = ApiService();
+  VideoPlayerController? _videoController;
 
   @override
   void initState() {
@@ -68,14 +70,20 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
     final format = DateFormat('dd MMMM yyyy, hh:mm a');
     return format.format(date);
   }
+  
   String formatDateFromTimestamp(dynamic timestamp) {
     if (timestamp is String) {
-      // Handle if timestamp is a string
-      timestamp = int.tryParse(timestamp) ?? 0; // Or handle as appropriate
+      timestamp = int.tryParse(timestamp) ?? 0;
     }
     final DateTime date = DateTime.fromMillisecondsSinceEpoch(timestamp);
     final DateFormat formatter = DateFormat('yyyy-MM-dd HH:mm:ss');
     return formatter.format(date);
+  }
+
+  @override
+  void dispose() {
+    _videoController?.dispose();
+    super.dispose();
   }
 
   @override
@@ -114,12 +122,12 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                 itemCount: _fotoProgressHistory.length,
                 separatorBuilder: (context, index) => const Divider(height: 16),
                 itemBuilder: (context, index) {
-                  debugPrint('$_fotoProgressHistory[index]');
-                  final fotoURL =
-                      _fotoProgressHistory[index]['newFotoProgressURL'];
-                  final isSuccess = fotoURL != null;
-                 dynamic timestamp = _fotoProgressHistory[index]['updateDate'];
-                 final String formattedDate = formatDateFromTimestamp(timestamp);
+                  final fotoURL = _fotoProgressHistory[index]['newFotoProgressURL'];
+                  final videoURL = _fotoProgressHistory[index]['newVideoProgressURL'];
+                  final isSuccess = fotoURL != null || videoURL != null;
+                  dynamic timestamp = _fotoProgressHistory[index]['updateDate'];
+                  final String formattedDate = formatDateFromTimestamp(timestamp);
+
                   return ListTile(
                     leading: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -137,8 +145,11 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                     ),
                     title: Text(
                         '$formattedDate - ${_fotoProgressHistory[index]['status']} '),
-                    subtitle: isSuccess
-                        ? GestureDetector(
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (fotoURL != null)
+                          GestureDetector(
                             onTap: () {
                               Navigator.push(
                                 context,
@@ -151,10 +162,31 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                             child: SizedBox(
                               width: 80,
                               height: 80,
-                              child: Image.network(fotoURL), // Menggunakan Image.network untuk menampilkan gambar dari URL
+                              child: Image.network(fotoURL),
                             ),
-                          )
-                        : null,
+                          ),
+                        if (videoURL != null)
+                          GestureDetector(
+                            onTap: () {
+                              _videoController = VideoPlayerController.network(videoURL)
+                                ..initialize().then((_) {
+                                  setState(() {});
+                                  _videoController!.play();
+                                });
+                              showDialog(
+                                context: context,
+                                builder: (context) => Dialog(
+                                  child: AspectRatio(
+                                    aspectRatio: _videoController!.value.aspectRatio,
+                                    child: VideoPlayer(_videoController!),
+                                  ),
+                                ),
+                              );
+                            },
+                            child: const Icon(Icons.play_circle_fill, size: 80),
+                          ),
+                      ],
+                    ),
                   );
                 },
               ),
@@ -165,3 +197,4 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
     );
   }
 }
+
